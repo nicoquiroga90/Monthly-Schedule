@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import scheduleRoutes from "./routes/scheduleRoutes.js";
+import scheduleRoutes from "./routes/scheduleRoutes.js";;
 
 const app = express();
 app.use(cors());

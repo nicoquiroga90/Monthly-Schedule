@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createSchedule } from "../services/scheduler";
+import { createSchedule } from "../services/scheduler.js";
 
 export const generateSchedule = (req: Request, res: Response): void => {
   try {
