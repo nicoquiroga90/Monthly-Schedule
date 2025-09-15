@@ -43,7 +43,7 @@ export default function Home() {
     const daysInMonth = new Date(year, month, 0).getDate();
     const scheduleArray: { date: string; workers: string[] }[] = [];
 
-    var day = 1;
+    let day = 1;
     const remaining = [...workers]; // mutable list
 
     while (day <= daysInMonth) {
