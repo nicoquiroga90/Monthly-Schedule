@@ -1,5 +1,7 @@
 "use client";
 
+import "./globals.css";
+
 import { useState } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -11,11 +13,15 @@ const months = [
 
 const weekDays = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
+interface ScheduleEntry {
+  date: string;
+  workers: string[];
+}
 export default function Home() {
   const [workersText, setWorkersText] = useState("");
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
   const [year, setYear] = useState<number>(new Date().getFullYear());
-  const [schedule, setSchedule] = useState<any[]>([]);
+  const [schedule, setSchedule] = useState<ScheduleEntry[]>([]);
   const [allWorkers, setAllWorkers] = useState<string[]>([]);
 
   // Generate schedule with fair distribution
@@ -37,8 +43,8 @@ export default function Home() {
     const daysInMonth = new Date(year, month, 0).getDate();
     const scheduleArray: { date: string; workers: string[] }[] = [];
 
-    let day = 1;
-    let remaining = [...workers]; // mutable list
+    var day = 1;
+    const remaining = [...workers]; // mutable list
 
     while (day <= daysInMonth) {
       const assigned: string[] = [];
