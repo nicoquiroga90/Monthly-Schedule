@@ -18,14 +18,19 @@ export default function Home() {
   const [schedule, setSchedule] = useState<any[]>([]);
   const [allWorkers, setAllWorkers] = useState<string[]>([]);
 
-  // Generar el calendario con reparto justo
+  // Generate schedule with fair distribution
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     const workers = workersText
       .split("\n")
-      .map((w) => w.trim().slice(0, 30))
+      .map((w) => w.trim().slice(0, 30)) // limit length
       .filter(Boolean);
+
+    if (workers.length === 0) {
+      alert("Please enter at least one worker.");
+      return;
+    }
 
     setAllWorkers(workers);
 
@@ -33,19 +38,17 @@ export default function Home() {
     const scheduleArray: { date: string; workers: string[] }[] = [];
 
     let day = 1;
-
-    // Lista mutable de trabajadores sin turno aún
-    let remaining = [...workers];
+    let remaining = [...workers]; // mutable list
 
     while (day <= daysInMonth) {
       const assigned: string[] = [];
 
-      // 2 trabajadores por día
+      // 2 workers per day
       for (let i = 0; i < 2; i++) {
         if (remaining.length > 0) {
           assigned.push(remaining.shift()!);
         } else {
-          // si ya todos tuvieron turno, asignamos repetidos
+          // everyone already assigned once → allow repeats
           const w = workers[(day + i - 1) % workers.length];
           assigned.push(w);
         }
@@ -62,7 +65,7 @@ export default function Home() {
     setSchedule(scheduleArray);
   };
 
-  // Detectar repetidos
+  // Workers with multiple shifts
   const getRepeatedWorkers = () => {
     const count: Record<string, number> = {};
     schedule.forEach((d) =>
@@ -73,7 +76,7 @@ export default function Home() {
     return Object.keys(count).filter((w) => count[w] > 1);
   };
 
-  // Detectar libres
+  // Workers with no shifts this month
   const getFreeWorkers = () => {
     const assigned = new Set(schedule.flatMap((d) => d.workers));
     return allWorkers.filter((w) => !assigned.has(w));
@@ -82,17 +85,18 @@ export default function Home() {
   const repeatedWorkers = getRepeatedWorkers();
   const freeWorkers = getFreeWorkers();
 
-  // Render calendario con huecos iniciales
+  // Render a month grid aligned to Monday
   const renderCalendar = () => {
     if (!schedule.length) return [];
 
     const firstDayIndex = new Date(schedule[0].date).getDay(); // 0=Sunday
-    const offset = firstDayIndex === 0 ? 6 : firstDayIndex - 1; // ajustar lunes=0
+    const offset = firstDayIndex === 0 ? 6 : firstDayIndex - 1; // shift so Monday=0
 
     const emptyCells = Array(offset).fill(null);
     return [...emptyCells, ...schedule];
   };
 
+  // Export the schedule grid as PDF
   const handleExportPDF = async () => {
     const input = document.getElementById("calendar-section");
     if (!input) return;
