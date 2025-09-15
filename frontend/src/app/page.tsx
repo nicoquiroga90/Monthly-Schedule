@@ -115,7 +115,6 @@ export default function Home() {
 
   return (
     <div style={{ padding: "2rem" }}>
-      <h1>Clean Schedule Generator</h1>
 
       <form onSubmit={handleSubmit} style={{ marginBottom: "2rem" }}>
         <label>Workers (one per line, max 30 chars):</label>
