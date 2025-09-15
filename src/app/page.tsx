@@ -1,10 +1,8 @@
 "use client";
 
-import "./globals.css";
-
 import { useState } from "react";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import SchedulePDFDocument from "./components/SchedulePDFDocument";
 
 const months = [
   "January","February","March","April","May","June",
@@ -17,20 +15,20 @@ interface ScheduleEntry {
   date: string;
   workers: string[];
 }
+
 export default function Home() {
   const [workersText, setWorkersText] = useState("");
-  const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
+  const [month, setMonth] = useState<number>(new Date().getMonth());
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [schedule, setSchedule] = useState<ScheduleEntry[]>([]);
   const [allWorkers, setAllWorkers] = useState<string[]>([]);
 
-  // Generate schedule with fair distribution
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     const workers = workersText
       .split("\n")
-      .map((w) => w.trim().slice(0, 30)) // limit length
+      .map((w) => w.trim().slice(0, 30))
       .filter(Boolean);
 
     if (workers.length === 0) {
@@ -40,28 +38,26 @@ export default function Home() {
 
     setAllWorkers(workers);
 
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const scheduleArray: { date: string; workers: string[] }[] = [];
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const scheduleArray: ScheduleEntry[] = [];
 
     let day = 1;
-    const remaining = [...workers]; // mutable list
+    const remaining = [...workers];
 
     while (day <= daysInMonth) {
       const assigned: string[] = [];
 
-      // 2 workers per day
       for (let i = 0; i < 2; i++) {
         if (remaining.length > 0) {
           assigned.push(remaining.shift()!);
         } else {
-          // everyone already assigned once → allow repeats
           const w = workers[(day + i - 1) % workers.length];
           assigned.push(w);
         }
       }
 
       scheduleArray.push({
-        date: new Date(year, month - 1, day).toISOString(),
+        date: new Date(year, month, day).toISOString(),
         workers: assigned,
       });
 
@@ -71,18 +67,14 @@ export default function Home() {
     setSchedule(scheduleArray);
   };
 
-  // Workers with multiple shifts
   const getRepeatedWorkers = () => {
     const count: Record<string, number> = {};
-    schedule.forEach((d) =>
-      d.workers.forEach((w: string) => {
-        count[w] = (count[w] || 0) + 1;
-      })
-    );
+    schedule.forEach((d) => d.workers.forEach((w) => {
+      count[w] = (count[w] || 0) + 1;
+    }));
     return Object.keys(count).filter((w) => count[w] > 1);
   };
 
-  // Workers with no shifts this month
   const getFreeWorkers = () => {
     const assigned = new Set(schedule.flatMap((d) => d.workers));
     return allWorkers.filter((w) => !assigned.has(w));
@@ -91,127 +83,75 @@ export default function Home() {
   const repeatedWorkers = getRepeatedWorkers();
   const freeWorkers = getFreeWorkers();
 
-  // Render a month grid aligned to Monday
   const renderCalendar = () => {
     if (!schedule.length) return [];
 
     const firstDayIndex = new Date(schedule[0].date).getDay(); // 0=Sunday
-    const offset = firstDayIndex === 0 ? 6 : firstDayIndex - 1; // shift so Monday=0
+    const offset = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
 
     const emptyCells = Array(offset).fill(null);
     return [...emptyCells, ...schedule];
   };
 
-  // Export the schedule grid as PDF
-  const handleExportPDF = async () => {
-    const input = document.getElementById("calendar-section");
-    if (!input) return;
-
-    const canvas = await html2canvas(input);
-    const imgData = canvas.toDataURL("image/png");
-
-    const pdf = new jsPDF("landscape", "pt", "a4");
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`clean-schedule-${month}-${year}.pdf`);
-  };
-
   return (
-    <div style={{ padding: "2rem" }}>
-
-      <form onSubmit={handleSubmit} style={{ marginBottom: "2rem" }}>
-        <label>Workers (one per line, max 30 chars):</label>
-        <br />
+    <div className="p-6 max-w-5xl mx-auto">
+      <form onSubmit={handleSubmit} className="mb-6 space-y-2">
+        <label className="block font-semibold">Workers (one per line, max 30 chars):</label>
         <textarea
           rows={6}
           value={workersText}
           onChange={(e) => setWorkersText(e.target.value)}
-          style={{ width: "300px" }}
+          className="w-full border rounded p-2"
         />
-        <br />
 
-        <label>Month:</label>
-        <select
-          value={month}
-          onChange={(e) => setMonth(Number(e.target.value))}
-          style={{ margin: "0 8px" }}
-        >
-          {months.map((m, i) => (
-            <option key={m} value={i + 1}>{m}</option>
-          ))}
-        </select>
+        <div className="flex items-center gap-4">
+          <label>Month:</label>
+          <select
+            value={month}
+            onChange={(e) => setMonth(Number(e.target.value))}
+            className="border rounded p-1"
+          >
+            {months.map((m, i) => (
+              <option key={m} value={i}>{m}</option>
+            ))}
+          </select>
 
-        <label>Year:</label>
-        <input
-          type="number"
-          value={year}
-          onChange={(e) => setYear(Number(e.target.value))}
-        />
-        <br />
+          <label>Year:</label>
+          <input
+            type="number"
+            value={year}
+            onChange={(e) => setYear(Number(e.target.value))}
+            className="border rounded p-1 w-20"
+          />
+        </div>
 
-        <button type="submit" style={{ marginTop: "1rem" }}>
+        <button type="submit" className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
           Generate Schedule
         </button>
       </form>
 
       {schedule.length > 0 && (
-        <div>
-          <div id="calendar-section">
-            <h2>Schedule for {months[month - 1]} {year}</h2>
+        <>
+          <div className="mb-4">
+            <h2 className="text-lg font-bold mb-2">{months[month]} {year}</h2>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(7, 1fr)",
-                gap: "8px",
-                marginTop: "1rem",
-              }}
-            >
+            <div className="grid grid-cols-7 gap-1 text-center">
               {weekDays.map((day) => (
-                <div
-                  key={day}
-                  style={{
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    borderBottom: "2px solid black",
-                  }}
-                >
-                  {day}
-                </div>
+                <div key={day} className="font-bold border-b py-1">{day}</div>
               ))}
 
               {renderCalendar().map((entry, idx) =>
                 entry ? (
-                  <div
-                    key={entry.date}
-                    style={{
-                      border: "1px solid #ccc",
-                      padding: "8px",
-                      minHeight: "80px",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between",
-                      backgroundColor: "white",
-                    }}
-                  >
-                    <div style={{ textAlign: "right", fontWeight: "bold" }}>
-                      {new Date(entry.date).getDate()}
-                    </div>
-                    <div style={{ fontSize: "0.9rem" }}>
-                      {entry.workers.map((w: string, i: number) => (
-                        <span
-                          key={i}
-                          style={{
-                            display: "block",
-                            color: repeatedWorkers.includes(w) ? "red" : "black",
-                            fontWeight: repeatedWorkers.includes(w) ? "bold" : "normal",
-                          }}
+                  <div key={entry.date} className="border min-h-[80px] p-1 flex flex-col justify-between bg-white">
+                    <div className="text-right font-bold">{new Date(entry.date).getDate()}</div>
+                    <div className="text-sm">
+                      {entry.workers.map((w:string) => (
+                        <div
+                          key={w}
+                          className={`${repeatedWorkers.includes(w) ? "text-red-600 font-bold" : ""}`}
                         >
                           {w}
-                        </span>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -222,21 +162,26 @@ export default function Home() {
             </div>
 
             {freeWorkers.length > 0 && (
-              <div style={{ marginTop: "2rem" }}>
-                <h3>Free this month</h3>
-                <ul>
-                  {freeWorkers.map((w, i) => (
-                    <li key={i}>{w}</li>
-                  ))}
+              <div className="mt-4">
+                <h3 className="font-semibold">Free this month</h3>
+                <ul className="list-disc list-inside">
+                  {freeWorkers.map((w) => <li key={w}>{w}</li>)}
                 </ul>
               </div>
             )}
           </div>
 
-          <button onClick={handleExportPDF} style={{ marginTop: "1rem" }}>
-            Export to PDF
-          </button>
-        </div>
+          <PDFDownloadLink
+            document={<SchedulePDFDocument schedule={schedule} month={months[month]} year={year} />}
+            fileName={`schedule-${month+1}-${year}.pdf`}
+          >
+            {({ loading }) => (
+              <button className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                {loading ? "Preparing PDF..." : "Download PDF"}
+              </button>
+            )}
+          </PDFDownloadLink>
+        </>
       )}
     </div>
   );

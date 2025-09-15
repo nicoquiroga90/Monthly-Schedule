@@ -1,2 +1,86 @@
-@import "tailwindcss/preflight"; 
-@import "tailwindcss/utilities"; 
+@import "tailwindcss";
+
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Geist Sans', sans-serif;
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+#calendar-section {
+  background-color: #ffffff;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+
+.week-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.day-cell {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #ffffff;
+  border-radius: 0.25rem;
+}
+
+.day-cell .date {
+  text-align: right;
+  font-weight: bold;
+}
+
+.day-cell .workers {
+  font-size: 0.875rem;
+}
+
+.day-cell .workers .repeated {
+  color: red;
+  font-weight: bold;
+}
+
+/* Free workers */
+.free-workers {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background-color: #f3f4f6;
+  border-radius: 0.5rem;
+}
+
+textarea, input, select {
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  margin-top: 0.5rem;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #1e40af;
+}
+
+
+
+

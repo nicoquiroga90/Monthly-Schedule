@@ -18,16 +18,10 @@ export const metadata: Metadata = {
   authors: [{ name: "Nico Q", url: "https://nico-quiroga.vercel.app/" }],
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 text-gray-900`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <header className="w-full p-4 bg-white shadow">
           <h1 className="text-xl font-bold">Clean Schedule Generator</h1>
         </header>
